@@ -15,11 +15,12 @@ export default function HomeScreen() {
 
 
   const [activeCategory, setActiveCategory] = useState('Eat-and-drink');
-  const [buisnessDatas, setMeals] = useState([]);
-  const [subCategory, setSubCategory] = useState([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
-
+  const [subCategory, setSubCategory] = useState([]);
   const [selectedSubCategoryIndex, setSelectedSubCategoryIndex] = useState(null);
+
+  const [buisnessDatas, setBuisnessData] = useState([]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [lat, setLat] = useState([])
@@ -37,8 +38,8 @@ export default function HomeScreen() {
         console.log(location.coords);
         setLat(location.coords.latitude)
         setLot(location.coords.longitude)
-        getSubCategories();
         getDatas();
+        getSubCategories();
         // Handle the retrieved location
       }
     })();
@@ -49,7 +50,7 @@ export default function HomeScreen() {
   const handleChangeCategory = (category) => {
     getDatas(category);
     setActiveCategory(category);
-    setMeals([]);
+    setBuisnessData([]);
     setSelectedSubCategory(null); // Reset selected subcategory when changing the category
   };
 
@@ -74,12 +75,13 @@ export default function HomeScreen() {
     }
   };
 
-  const getDatas = async (category = "Eat-and-drink", lat = 42.36346, lot = -71.05444) => {
+  const getDatas = async (category = "Eat-and-drink") => {
     try {
-      const response = await axios.get(`https://discover.search.hereapi.com/v1/discover?at=${lat},${lot}&limit=20&q=${category}&in=countryCode:IND&apiKey=Uurus253yojc6Q1c91fCkLjfQL1aVkvxkPL9wYyF0MY`);
-      // console.log('got datas: ',response.data);
+      const response = await axios.get(`https://discover.search.hereapi.com/v1/discover?at=19.228825,72.854118&limit=20&q=${category}&in=countryCode:IND&apiKey=Uurus253yojc6Q1c91fCkLjfQL1aVkvxkPL9wYyF0MY`);
+      console.log('got datas: ',response.data);
       if (response && response.data) {
-        setMeals(response.data.items);
+
+        setBuisnessData(response.data.items);
       }
     } catch (err) {
       console.log('error: ', err.message);
@@ -90,7 +92,7 @@ export default function HomeScreen() {
       const response = await axios.get(`https://discover.search.hereapi.com/v1/discover?at=${lat},${lot}&limit=30&q=${category}&in=countryCode:IND&apiKey=Uurus253yojc6Q1c91fCkLjfQL1aVkvxkPL9wYyF0MY`);
       // console.log('got datas: ',response.data);
       if (response && response.data) {
-        setMeals(response.data.items);
+        setBuisnessData(response.data.items);
       }
     } catch (err) {
       console.log('error: ', err.message);
