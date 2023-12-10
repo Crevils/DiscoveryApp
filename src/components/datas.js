@@ -6,20 +6,19 @@ import Loading from './loading';
 import { CachedImage } from '../helpers/image';
 import { useNavigation } from '@react-navigation/native';
 
-export default function Datas({ buisnessDatas }) {
+export default function Datas({ All_BuisnessData, selectedSubCategory }) {
   const navigation = useNavigation();
-
   return (
     <View style={{ marginHorizontal: wp(4), marginBottom: hp(3) }}>
-      <Text style={{ fontSize: hp(3), fontWeight: 'bold', color: 'black' }}>
-        Explore
+      <Text style={{ fontSize: hp(3), fontWeight: 'bold', color: 'black', marginBottom: 20 }}>
+       {selectedSubCategory.strCategoryName} Near You
       </Text>
       <View>
-        {buisnessDatas.length === 0 ? (
-          <Loading size="large" style={{ marginTop: hp(5) }} />
+        {All_BuisnessData.length === 0 ? (
+          <Loading size="large" style={{ marginTop: hp(5)  }} />
         ) : (
           <View>
-            {buisnessDatas.map((item, index) => (
+            {All_BuisnessData.map((item, index) => (
               <RecipeCard key={item.id} item={item} index={index} navigation={navigation} />
             ))}
           </View>

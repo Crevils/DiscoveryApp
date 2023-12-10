@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Image, TextInput, Pressable } from 'react-native'
+import { View, Text, ScrollView, Image, TextInput, Pressable, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -6,20 +6,24 @@ import { BellIcon, MagnifyingGlassIcon } from 'react-native-heroicons/outline'
 import * as Location from 'expo-location';
 
 import Categories from '../components/categories';
+import FamousPlaces from '../components/famousPlaces';
 import { categories } from '../constants';
 import axios from 'axios';
-import Datas from '../components/datas';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
+import Loading from '../components/loading';
+import Config from 'react-native-config';
+
+
+const apiKey = Config.API_KEY;
 export default function HomeScreen() {
 
 
   const [activeCategory, setActiveCategory] = useState('Eat-and-drink');
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
-  const [subCategory, setSubCategory] = useState([]);
-  const [selectedSubCategoryIndex, setSelectedSubCategoryIndex] = useState(null);
 
-  const [buisnessDatas, setBuisnessData] = useState([]);
+  const [All_BuisnessData, setAll_BuisnessData] = useState([]);
+  const [famousPlacesData, setfamousPlacesData] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -32,40 +36,56 @@ export default function HomeScreen() {
       // Request location permission
       const { status } = await Location.requestForegroundPermissionsAsync();
 
-      if (status === 'granted') {
+      if (status === 'granted' && selectedSubCategory) {
         // Get current location
         const location = await Location.getCurrentPositionAsync({});
         console.log(location.coords);
         setLat(location.coords.latitude)
         setLot(location.coords.longitude)
-        getDatas();
-        getSubCategories();
+        getAll_buisnessData(selectedSubCategory.strCategory);
+        
         // Handle the retrieved location
       }
-    })();
-  }, []);
+      if (selectedSubCategory) {
+        try {
+          // Fetch datas based on the selected subcategory
+          const response = await axios.get(`https://discover.search.hereapi.com/v1/discover?at=${lat},${lot}&limit=20&q=${selectedSubCategory.strCategory}&in=countryCode:IND&apiKey=traTGNOcOkuSQzqAWFmtd4ileKvdma2jWJuZ1153Twg`);
 
-  const category = categories
+          if (response && response.data) {
+            if (response.data === 0) {
+              <Loading size="large" style={{ marginTop: hp(5) }} />
+            } else {
+              // Set the fetched data
+              setAll_BuisnessData(response.data.items);
+              // Navigate to 'All_buisnessDataScreen'
+              navigation.navigate('All_buisnessDataScreen', { All_BuisnessData: response.data.items, selectedSubCategory });
+            }
+
+          }
+        } catch (err) {
+          console.log('error: ', err.message);
+        }
+      }
+    })();
+  }, [selectedSubCategory]);
 
   const handleChangeCategory = (category) => {
-    getDatas(category);
+    getAll_buisnessData(category);
     setActiveCategory(category);
-    setBuisnessData([]);
+    setAll_BuisnessData([]);
     setSelectedSubCategory(null); // Reset selected subcategory when changing the category
   };
 
-  const handleSelectSubCategory = (subCat) => {
+  const handleSelectSubCategory = async (subCat) => {
     if (subCat !== selectedSubCategory) {
       setSelectedSubCategory(subCat);
-      // Fetch datas based on the selected subcategory
-      getDatas(subCat.strCategory);
     }
   };
 
   const handleSearch = async () => {
     try {
       const response = await axios.get(
-        `https://autosuggest.search.hereapi.com/v1/autosuggest?at=${lat},${lot}&q=${searchTerm}&apiKey=Uurus253yojc6Q1c91fCkLjfQL1aVkvxkPL9wYyF0MY`
+        `https://autosuggest.search.hereapi.com/v1/autosuggest?at=${lat},${lot}&q=${searchTerm}&apiKey=traTGNOcOkuSQzqAWFmtd4ileKvdma2jWJuZ1153Twg`
       );
       if (response && response.data && response.data.items) {
         setSearchResults(response.data.items);
@@ -75,37 +95,24 @@ export default function HomeScreen() {
     }
   };
 
-  const getDatas = async (category = "Eat-and-drink") => {
+  const getAll_buisnessData = async (category = "Eat-and-drink") => {
     try {
-      const response = await axios.get(`https://discover.search.hereapi.com/v1/discover?at=19.228825,72.854118&limit=20&q=${category}&in=countryCode:IND&apiKey=Uurus253yojc6Q1c91fCkLjfQL1aVkvxkPL9wYyF0MY`);
-      console.log('got datas: ',response.data);
-      if (response && response.data) {
+      const response = await axios.get(`https://discover.search.hereapi.com/v1/discover?at=${lat},${lot}&limit=20&q=${category}&in=countryCode:IND&apiKey=traTGNOcOkuSQzqAWFmtd4ileKvdma2jWJuZ1153Twg`);
 
-        setBuisnessData(response.data.items);
-      }
-    } catch (err) {
-      console.log('error: ', err.message);
-    }
-  }
-  const getSubCategories = async (category = "Eat-and-drink") => {
-    try {
-      const response = await axios.get(`https://discover.search.hereapi.com/v1/discover?at=${lat},${lot}&limit=30&q=${category}&in=countryCode:IND&apiKey=Uurus253yojc6Q1c91fCkLjfQL1aVkvxkPL9wYyF0MY`);
-      // console.log('got datas: ',response.data);
       if (response && response.data) {
-        setBuisnessData(response.data.items);
+        setAll_BuisnessData(response.data.items);
+      }
+
+      const fampousPlaceResponse = await axios.get(`https://discover.search.hereapi.com/v1/discover?at=12.5185124,76.8779611&limit=5&q=rest&in=countryCode:IND&apiKey=traTGNOcOkuSQzqAWFmtd4ileKvdma2jWJuZ1153Twg`);
+    // const response = await axios.get(`https://discover.search.hereapi.com/v1/discover?at=${lat},${lot}&limit=5&q=rest&in=countryCode:IND&apiKey=traTGNOcOkuSQzqAWFmtd4ileKvdma2jWJuZ1153Twg`);
+      if (fampousPlaceResponse && fampousPlaceResponse.data) {
+        setfamousPlacesData(fampousPlaceResponse.data.items)
       }
     } catch (err) {
       console.log('error: ', err.message);
     }
   }
 
-  const data = () => {
-    return (
-      <View>
-        <Datas buisnessDatas={buisnessDatas} categories={categories} />
-      </View>
-    )
-  }
   return (
     <View className="flex-1 bg-white">
       <StatusBar style="dark" />
@@ -120,7 +127,9 @@ export default function HomeScreen() {
             <Image source={require('../../assets/images/avatar.png')} style={{ height: hp(5), width: hp(5.5) }} />
             <Text style={{ fontSize: hp(1.7) }} className="text-neutral-600">Hello, Kislay!</Text>
           </View>
-          <BellIcon size={hp(4)} color="gray" />
+          <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
+            <BellIcon size={hp(4)} color="gray" />
+          </TouchableOpacity>
         </View>
 
         {/* greetings and punchline */}
@@ -159,7 +168,9 @@ export default function HomeScreen() {
         <View>
           {categories.length > 0 && <Categories categories={categories} activeCategory={activeCategory} handleChangeCategory={handleChangeCategory} />}
         </View>
-
+        <Text style={{ fontSize: hp(3), fontWeight: 'bold', color: 'black', marginHorizontal: 20 }}>
+          Select Category
+        </Text>
 
 
         <View >
@@ -177,7 +188,7 @@ export default function HomeScreen() {
                     backgroundColor: subCat === selectedSubCategory ? '#FFC107' : 'lightgray',
                     borderRadius: 20,
                     padding: 10,
-                    margin: 20,
+                    margin: 15,
                   }}
                   onPress={() => handleSelectSubCategory(subCat)}
                 >
@@ -191,12 +202,16 @@ export default function HomeScreen() {
             ))}
         </View>
 
-        {/* datas */}
-        {selectedSubCategory && (
-          <View>
-            <Datas buisnessDatas={buisnessDatas} categories={categories} />
+        {/* <View className="m-3 mt-24">
+          <View style={{ marginHorizontal: wp(4), marginBottom: hp(3) }}>
+            <View>
+              <Text style={{ fontSize: hp(3), fontWeight: 'bold', color: 'black', marginBottom: 20 }}>
+                Famous Places Near You
+              </Text>
+              < FamousPlaces famousPlacesData={famousPlacesData} />
+            </View>
           </View>
-        )}
+        </View> */}
 
       </ScrollView>
     </View>

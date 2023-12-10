@@ -25,10 +25,10 @@ export default function RecipeDetailScreen(props) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getBuisnessDataData(item.title);
+        getBuisnessData(item.title);
     }, [])
 
-    const getBuisnessDataData = async (id) => {
+    const getBuisnessData = async (id) => {
         try {
             const response = await axios.get(`https://discover.search.hereapi.com/v1/lookup?id=${item.id}&apiKey=Uurus253yojc6Q1c91fCkLjfQL1aVkvxkPL9wYyF0MY`);
             if (response && response.data) {
@@ -99,11 +99,11 @@ export default function RecipeDetailScreen(props) {
                 <Animated.View animation={FadeInDown} duration={500} style={{ paddingHorizontal: 20, justifyContent: 'space-between', paddingTop: 5 }}>
                     {/* Business name and location  */}
                     <View>
-                        <View className="flex flex-row items-center px-2">
+                        <View className="flex flex-row items-center pr-2 mb-1">
                             {item.categories && item.categories.length > 0 ? (
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                                     {item.categories.map((category, index) => (
-                                        <Animated.Text key={index} animation={FadeIn} className="bg-amber-400 mr-2 px-2 rounded-lg" style={{ fontSize: hp(2.5), color: '#666' }}>
+                                        <Animated.Text key={index} animation={FadeIn} className="bg-amber-400 mr-2 px-2 rounded-lg" style={{ fontSize: hp(2), color: '#666' }}>
                                             {category.name}
                                         </Animated.Text>
                                     ))}
